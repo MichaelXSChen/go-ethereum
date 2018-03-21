@@ -1,15 +1,23 @@
 package trustedHW
 
+
 import (
+	"errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/core/state"
+	"math/big"
+	"github.com/ethereum/go-ethereum/rpc"
+
+	"github.com/naoina/toml/ast"
 )
 
 var (
 	// errUnknownBlock is returned when the list of signers is requested for a block
 	// that is not part of the local blockchain.
 	errUnknownBlock = errors.New("unknown block")
+	errNoCommittee = errors.New("not a committee member")
 )
 
 
@@ -82,13 +90,69 @@ func (thw *TrustedHW) verifyHeader(chain consensus.ChainReader, header *types.He
 	}else{
 		parent = parents[0]
 	}
+	//What to do about the parent.
+
+
+	return thw.verifySeal(chain, header)
+}
+
+func (thw *TrustedHW) verifySeal(chain consensus.ChainReader, header *types.Header) error {
 	//Step 2: check author is in the committee list
 
 	//Step 3: check the verifier's signature
 
 	//Step 4: check the author's signature.
 
+	return  nil
+}
+
+func (thw *TrustedHW) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
+	//does not support uncles
+	if len(block.Uncles()) > 0 {
+		return errors.New("uncles not allowed")
+	}
 	return nil
 }
 
+
+func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Header) error {
+	return thw.verifySeal(chain, header)
+}
+
+//Read through the Chain and Determine whether itself is the committee.
+func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, number uint64) bool{
+
+	return true
+}
+
+func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header) error {
+	//A header is prepared only when a consensus has been made.
+	number := header.Number.Uint64()
+	if ! thw.isCommittee(chain, number){
+		return errNoCommittee
+	}
+
+	return nil
+}
+
+
+
+func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction,
+	uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error){
+
+
+}
+
+func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error){
+
+}
+
+func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
+
+}
+
+
+func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API{
+
+}
 
