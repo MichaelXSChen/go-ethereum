@@ -119,8 +119,8 @@ func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Head
 	return thw.verifySeal(chain, header)
 }
 
-//Read through the Chain and Determine whether itself is the committee.
-func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, number uint64) bool{
+//Read through the Chain and Determine whether addr is in the committee.
+func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64) bool{
 
 	return true
 }
@@ -131,12 +131,11 @@ func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header)
 	if ! thw.isCommittee(chain, number){
 		return errNoCommittee
 	}
-
 	return nil
 }
 
 
-
+//ensuring no uncles are set. No
 func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction,
 	uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error){
 
@@ -144,7 +143,7 @@ func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header
 }
 
 func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error){
-
+	//attempt to achieve consensus.
 }
 
 func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
