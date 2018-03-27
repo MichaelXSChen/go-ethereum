@@ -128,6 +128,10 @@ type BlockChain struct {
 	vmConfig  vm.Config
 
 	badBlocks *lru.Cache // Bad block cache
+
+	//trusted hw code.
+
+
 }
 
 // NewBlockChain returns a fully initialised block chain using information
