@@ -16,6 +16,6 @@ DIRECTORY=$datadir/$no
 mkdir -p $datadir
 if [ ! -d "$DIRECTORY" ]; then
     echo "initiating node...."
-    ./geth --datadir $DIRECTORY init ./genesis.json
+    ./build/bin/geth --datadir $DIRECTORY init ./genesis.json
 fi
-./geth --datadir $DIRECTORY --networkid 930412 --ipcdisable --port 619$no --rpc --rpccorsdomain "*" --rpcport 81$no --bootnodes $bootnode_addr console
+./build/bin/geth --datadir $DIRECTORY --networkid 930412 --ipcdisable --port 619$no --rpc --rpccorsdomain "*" --rpcport 81$no --bootnodes $bootnode_addr console
