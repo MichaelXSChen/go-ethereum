@@ -42,8 +42,8 @@ type THWState struct {
 	CommitteeTerms *arraylist.List  //the start block number of each committee.
 
 	//parameters
-	committeeRatio int64 //On average, there is 1 committee every ``x'' candidates
-	committeeMaxTerm int64 //One committee can serve ``x'' terms
+	committeeRatio uint64 //On average, there is 1 committee every ``x'' candidates
+	committeeMaxTerm uint64 //One committee can serve ``x'' terms
 
 }
 
@@ -121,8 +121,8 @@ func (thws *THWState) AddCandidate(candidate *Candidate) error{
 
 
 //a simple/fake checkCommittee function
-func (thws *THWState) checkCommittee(addr common.Address, rand int64) bool{
-	x := int64(addrToInt(addr))
+func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool{
+	x := addrToInt(addr)
 	m := thws.committeeRatio
 	if (x - rand) % m == 0 {
 		return true

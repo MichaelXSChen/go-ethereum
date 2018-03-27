@@ -193,6 +193,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			}
 		}
 	}
+	bc.thwState=new(THWState)
 	bc.thwState.Init(bc)
 	// Take ownership of this particular state
 	go bc.update()
