@@ -31,6 +31,8 @@ import (
 // state from one point to another.
 //
 // StateProcessor implements Processor.
+
+//xs: state processor.
 type StateProcessor struct {
 	config *params.ChainConfig // Chain configuration options
 	bc     *BlockChain         // Canonical block chain

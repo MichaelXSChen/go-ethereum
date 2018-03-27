@@ -9,8 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"math/big"
 	"github.com/ethereum/go-ethereum/rpc"
-
-	"github.com/naoina/toml/ast"
+	//"github.com/naoina/toml/ast"
+	//"time"
 )
 
 var (
@@ -18,6 +18,7 @@ var (
 	// that is not part of the local blockchain.
 	errUnknownBlock = errors.New("unknown block")
 	errNoCommittee = errors.New("not a committee member")
+	errNoLeader = errors.New("not leader, cannot generate a block")
 )
 
 
@@ -38,6 +39,8 @@ func (thw *TrustedHW) Author(header *types.Header) (common.Address, error){
 	return header.Coinbase, nil
 }
 
+
+//used to verify header downloaded from other peers.
 func (thw *TrustedHW) VerifyHeader (chain consensus.ChainReader, header *types.Header, seal bool) error {
 
 	return thw.verifyHeader(chain, header, nil);
@@ -64,6 +67,8 @@ func (thw *TrustedHW) VerifyHeaders(chain consensus.ChainReader, headers []*type
 	}()
 	return abort, results
 }
+
+
 // verifyHeader checks whether a header conforms to the consensus rules.The
 // caller may optionally pass in a batch of parents (ascending order) to avoid
 // looking those up from the database. This is useful for concurrently verifying
@@ -93,18 +98,18 @@ func (thw *TrustedHW) verifyHeader(chain consensus.ChainReader, header *types.He
 	//What to do about the parent.
 
 
-	return thw.verifySeal(chain, header)
-}
-
-func (thw *TrustedHW) verifySeal(chain consensus.ChainReader, header *types.Header) error {
 	//Step 2: check author is in the committee list
 
 	//Step 3: check the verifier's signature
 
 	//Step 4: check the author's signature.
 
-	return  nil
+
+
+	return nil
 }
+
+
 
 func (thw *TrustedHW) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
 	//does not support uncles
@@ -114,22 +119,34 @@ func (thw *TrustedHW) VerifyUncles(chain consensus.ChainReader, block *types.Blo
 	return nil
 }
 
-
+//double check the seal of an outgoing message.
 func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Header) error {
-	return thw.verifySeal(chain, header)
+	//It is currently a double check.
+	return nil
 }
 
 //Read through the Chain and Determine whether addr is in the committee.
 func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64) bool{
-
+	//TODO: Main challenge here.
 	return true
 }
 
 func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header) error {
 	//A header is prepared only when a consensus has been made.
 	number := header.Number.Uint64()
-	if ! thw.isCommittee(chain, number){
+	if ! thw.isCommittee(chain, header.Coinbase, number){
 		return errNoCommittee
+	}
+
+	header.Coinbase = common.Address{} //empty
+	header.Nonce = types.BlockNonce{} //empty
+
+	header.Difficulty = nil
+	header.MixDigest = common.Hash{} //empty
+
+	parent := chain.GetHeader(header.ParentHash, number-1)
+	if parent == nil {
+		return consensus.ErrUnknownAncestor
 	}
 	return nil
 }
@@ -140,18 +157,47 @@ func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header
 	uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error){
 
 
+	header.Root = state.IntermediateRoot(true)
+	header.UncleHash = types.CalcUncleHash(nil)
+	//TODO: Whether the rewards should come from here.
+
+
+	return types.NewBlock(header, txs, nil, receipts), nil
+
 }
 
 func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error){
 	//attempt to achieve consensus.
+
+	//Step 1. DO traditional Paxos consensus
+	ret, seed := thw.invokeConsensus(chain, block.Number())
+	if ret == false { //not a consensused leader
+		_ = seed
+		return nil, errNoCommittee
+	}
+	//elected as the leader.
+	//TODO: step 2, use verifier to avoid network partition. Next round.
+	//Step 2. Ask for verfication from the verifier groups.
+
+
+	return block, nil
+
+}
+//Main function to achieve consensus.
+func (thw *TrustedHW) invokeConsensus (chain consensus.ChainReader, number *big.Int) (elected bool, seed uint64){
+	return true, 0
 }
 
-func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
 
+func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
+	//Can use this function to change the protocol parameters.
+
+	return nil
 }
 
 
 func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API{
+	return nil
 
 }
 
