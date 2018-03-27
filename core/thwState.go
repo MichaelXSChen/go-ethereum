@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"errors"
 	"encoding/binary"
-	"container/list"
 )
 
 var(
@@ -42,17 +41,17 @@ type THWState struct {
 	//Committee term
 	CommitteeTerms *arraylist.List  //the start block number of each committee.
 
-
 	//parameters
 	committeeRatio int64 //On average, there is 1 committee every ``x'' candidates
 	committeeMaxTerm int64 //One committee can serve ``x'' terms
 
 }
 
-func (thws *THWState) Init(){ //TODO: set parameters
+func (thws *THWState) Init(bc *BlockChain,){ //TODO: set parameters
 	thws.mu.Lock()
 	thws.candidateList = hashmap.New()
 	thws.CommitteeTerms = arraylist.New()
+	thws.bc = bc
 	thws.candidateCount = 0
 	thws.mu.Unlock()
 }
@@ -64,7 +63,7 @@ func (thws *THWState) findTerm (num uint64) (*Term, error){
 
 	it := thws.CommitteeTerms.Iterator()
 
-	for it.End(); it.Prev(){
+	for it.End(); it.Prev(); {
 		t, _ := it.Value().(*Term)
 		if num > t.start {
 			if num > t.start + t.len{
@@ -78,7 +77,7 @@ func (thws *THWState) findTerm (num uint64) (*Term, error){
 }
 
 
-func (thws *THWState) IsCommittee(addr common.Address, num int64) (bool, error){
+func (thws *THWState) IsCommittee(addr common.Address, num uint64) (bool, error){
 	t, err := thws.findTerm(num)
 	if err != nil {
 		return false, err

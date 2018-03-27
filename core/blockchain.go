@@ -130,7 +130,7 @@ type BlockChain struct {
 	badBlocks *lru.Cache // Bad block cache
 
 	//trusted hw code.
-
+	thwState *THWState
 
 }
 
@@ -193,6 +193,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			}
 		}
 	}
+	bc.thwState.Init(bc)
 	// Take ownership of this particular state
 	go bc.update()
 	return bc, nil
