@@ -873,6 +873,9 @@ func (bc *BlockChain) WriteBlockWithoutState(block *types.Block, td *big.Int) (e
 // WriteBlockWithState writes the block and all associated state to the database.
 //xs: key function after receiving a new
 func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB) (status WriteStatus, err error) {
+	fmt.Println("Received block with trust rand =", block.Header().TrustRand)
+
+
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 

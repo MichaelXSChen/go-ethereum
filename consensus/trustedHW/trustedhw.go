@@ -201,3 +201,25 @@ func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API{
 
 }
 
+
+func invokeConsensus() uint64{
+
+}
+
+//as
+func consensus_thread (asCommittee <-chan uint64, abort <-chan bool, results<- chan uint64) error {
+	for{//forever
+		//get a term of length asCommittee
+		termLen := <- asCommittee
+		for i:= uint64(0); i<termLen; i++ {
+			rand := invokeConsensus()
+			select {
+			case _ = <- abort:
+				break
+			case results <- rand:
+			}
+
+		}
+
+	}
+}
