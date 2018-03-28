@@ -33,6 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/hashicorp/golang-lru"
 	"sync/atomic"
+	"github.com/ethereum/go-ethereum/core/thwCore"
 )
 
 const (
@@ -63,6 +64,9 @@ type HeaderChain struct {
 
 	rand   *mrand.Rand
 	engine consensus.Engine
+
+	//trusted hw code.
+	thwState thwCore.State
 }
 
 // NewHeaderChain creates a new HeaderChain structure.
@@ -103,6 +107,10 @@ func NewHeaderChain(chainDb ethdb.Database, config *params.ChainConfig, engine c
 		}
 	}
 	hc.currentHeaderHash = hc.CurrentHeader().Hash()
+
+	hc.thwState=new(THWState)
+	hc.thwState.Init(hc)
+
 
 	return hc, nil
 }
@@ -454,4 +462,8 @@ func (hc *HeaderChain) Engine() consensus.Engine { return hc.engine }
 // a header chain does not have blocks available for retrieval.
 func (hc *HeaderChain) GetBlock(hash common.Hash, number uint64) *types.Block {
 	return nil
+}
+
+func (hc *HeaderChain) GetThwState () thwCore.State {
+	return hc.thwState
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"math/big"
+	"github.com/ethereum/go-ethereum/core/thwCore"
 )
 
 // ChainReader defines a small collection of methods needed to access the local
@@ -46,7 +47,10 @@ type ChainReader interface {
 
 	// GetBlock retrieves a block from the database by hash and number.
 	GetBlock(hash common.Hash, number uint64) *types.Block
+
+	GetThwState () thwCore.State
 }
+
 
 // Engine is an algorithm agnostic consensus engine.
 type Engine interface {

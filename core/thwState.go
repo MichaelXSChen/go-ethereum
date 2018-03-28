@@ -8,32 +8,20 @@ import (
 	"fmt"
 	"errors"
 	"encoding/binary"
+	"github.com/ethereum/go-ethereum/core/thwCore"
 )
 
 var(
 	ErrNoCandidate = errors.New("Not a Candidate")
+	ErrInitFailed  = errors.New("THW State Init Failed")
 )
 
 
-type Candidate struct{
-	addr common.Address
-	joinRound int64    //at which round the candidate joined as candidate
-	term int64         //the ``total'' term for the candidate
-}
-
-type Term struct{
-	start  uint64
-	len    uint64
-	seed   int64
-}
-
-
-
 type THWState struct {
-	bc *BlockChain
+	hc *HeaderChain
 	mu sync.Mutex
 	//members
-	candidateList *hashmap.Map
+	candidateList *hashmap.Map    //key: addr, value: *Candidate
 	candidateCount int64
 	//rand seed from block
 	//latestRand int64
@@ -47,26 +35,31 @@ type THWState struct {
 
 }
 
-func (thws *THWState) Init(bc *BlockChain,){ //TODO: set parameters
+func (thws *THWState) Init(headerchain interface{}) error { //TODO: set parameters
 	thws.mu.Lock()
 	thws.candidateList = hashmap.New()
 	thws.CommitteeTerms = arraylist.New()
-	thws.bc = bc
+	hc, ok := headerchain.(*HeaderChain)
+	if !ok {
+		return ErrInitFailed
+	}
+	thws.hc = hc
 	thws.candidateCount = 0
 	thws.mu.Unlock()
+	return nil
 }
 
 
-func (thws *THWState) findTerm (num uint64) (*Term, error){
+func (thws *THWState) findTerm (num uint64) (*thwCore.Term, error){
 	thws.mu.Lock()
 	defer thws.mu.Unlock()
 
 	it := thws.CommitteeTerms.Iterator()
 
 	for it.End(); it.Prev(); {
-		t, _ := it.Value().(*Term)
-		if num > t.start {
-			if num > t.start + t.len{
+		t, _ := it.Value().(*thwCore.Term)
+		if num > t.Start {
+			if num > t.Start + t.Len{
 				return nil, errors.New("[Find term], out of bound")
 			}else{
 				return t, nil
@@ -77,60 +70,60 @@ func (thws *THWState) findTerm (num uint64) (*Term, error){
 }
 
 
+//a simple/fake checkCommittee function
+func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool {
+	x := addrToInt(addr)
+	m := thws.committeeRatio
+	if (x-rand)%m == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+
 func (thws *THWState) IsCommittee(addr common.Address, num uint64) (bool, error){
 	t, err := thws.findTerm(num)
 	if err != nil {
 		return false, err
 	}
-	block := thws.bc.GetBlockByNumber(t.start)
-	seed := block.Header().TrustRand
+	seed := thws.hc.GetHeaderByNumber(t.Start).TrustRand
 
 	return thws.checkCommittee(addr, seed), nil
 }
 
 
 func (thws *THWState) IsNextCommittee(addr common.Address, num uint64) (bool, error){
-	seed := thws.bc.GetBlockByNumber(num).Header().TrustRand
+	seed := thws.hc.GetHeaderByNumber(num).TrustRand
 	return thws.checkCommittee(addr, seed), nil
 }
 
 
 
-
-func (thws *THWState) AddCandidate(candidate *Candidate) error{
+func (thws *THWState) AddCandidate(candidate *thwCore.Candidate) error{
 	thws.mu.Lock()
 	defer thws.mu.Unlock()
 
-	ret, found := thws.candidateList.Get(candidate.addr)
+	ret, found := thws.candidateList.Get(candidate.Addr)
 	if found == true{
 		//found an candidate
-		c, ok := ret.(*Candidate)
+		c, ok := ret.(*thwCore.Candidate)
 		if !ok {
 			fmt.Println("Wrong type in the hash map")
 			panic("Wrong type in the hash map")
 		}
 		//renew the cointract
-		c.term = c.term + candidate.term
+		c.Term = c.Term + candidate.Term
 	}else{
 		//not found in the list
-		thws.candidateList.Put(candidate.addr, candidate)
+		thws.candidateList.Put(candidate.Addr, candidate)
 		thws.candidateCount++
 	}
+	fmt.Println("added candidate with addr", candidate.Addr)
+
 	return nil
 }
 
-
-//a simple/fake checkCommittee function
-func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool{
-	x := addrToInt(addr)
-	m := thws.committeeRatio
-	if (x - rand) % m == 0 {
-		return true
-	}else{
-		return false
-	}
-
-}
 
 func addrToInt (address common.Address) uint64{
 	return binary.BigEndian.Uint64(address[0:8]) +

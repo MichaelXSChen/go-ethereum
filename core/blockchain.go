@@ -43,6 +43,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/hashicorp/golang-lru"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
+	"github.com/ethereum/go-ethereum/core/thwCore"
 )
 
 var (
@@ -129,8 +130,7 @@ type BlockChain struct {
 
 	badBlocks *lru.Cache // Bad block cache
 
-	//trusted hw code.
-	thwState *THWState
+
 
 }
 
@@ -193,8 +193,7 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 			}
 		}
 	}
-	bc.thwState=new(THWState)
-	bc.thwState.Init(bc)
+
 	// Take ownership of this particular state
 	go bc.update()
 	return bc, nil
@@ -479,6 +478,13 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 //
 // Note, this function assumes that the `mu` mutex is held!
 func (bc *BlockChain) insert(block *types.Block) {
+	fmt.Println("Insert Called");
+	//candidate := new(Candidate)
+	//candidate.addr = block.Header().Coinbase
+	//candidate.joinRound = block.Header().Number.Uint64()
+	//candidate.term = 100
+	//bc.thwState.AddCandidate(candidate)
+
 	// If the block is on a side chain or an unknown one, force other heads onto it too
 	updateHeads := GetCanonicalHash(bc.db, block.NumberU64()) != block.Hash()
 
@@ -1567,4 +1573,8 @@ func (bc *BlockChain) SubscribeChainSideEvent(ch chan<- ChainSideEvent) event.Su
 // SubscribeLogsEvent registers a subscription of []*types.Log.
 func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
+}
+
+func (bc *BlockChain) GetThwState () thwCore.State {
+	return bc.hc.thwState
 }

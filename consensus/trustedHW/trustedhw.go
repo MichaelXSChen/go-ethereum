@@ -169,6 +169,9 @@ func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header
 func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error){
 	//attempt to achieve consensus.
 
+
+
+
 	//Step 1. DO traditional Paxos consensus
 	ret, seed := thw.invokeConsensus(chain, block.Number())
 	if ret == false { //not a consensused leader
