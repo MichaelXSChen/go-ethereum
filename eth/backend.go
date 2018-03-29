@@ -209,11 +209,11 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 	}
 	return db, nil
 }
-
+//xs: create consensus engine.
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
 func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
 	// If proof-of-authority is requested, set it up
-	fmt.Println("Creating Consensus enginer")
+	log.Debug("Creating Consensus engine")
 
 
 	if chainConfig.Clique != nil {

@@ -14,4 +14,5 @@ type State interface{
 	IsCommittee(addr common.Address, num uint64) (bool, error)
 	IsNextCommittee(addr common.Address, num uint64) (bool, error)
 	AddCandidate(candidate *Candidate) error
+	FakeConsensus(addr common.Address, number uint64) (bool, error)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	//"github.com/naoina/toml/ast"
 	//"time"
+	"github.com/ethereum/go-ethereum/core/thwCore"
 )
 
 var (
@@ -126,18 +127,22 @@ func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Head
 }
 
 //Read through the Chain and Determine whether addr is in the committee.
-func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64) bool{
-	//TODO: Main challenge here.
-	return true
+func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64) (bool, error) {
+	state := chain.GetThwState()
+	return state.IsCommittee(addr, number)
 }
+
 
 func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header) error {
 	//A header is prepared only when a consensus has been made.
 	number := header.Number.Uint64()
-	if ! thw.isCommittee(chain, header.Coinbase, number){
+	ret, err := thw.isCommittee(chain, header.Coinbase, number)
+	if err != nil {
+		return err
+	}
+	if !ret{
 		return errNoCommittee
 	}
-
 	header.Coinbase = common.Address{} //empty
 	header.Nonce = types.BlockNonce{} //empty
 
@@ -168,21 +173,21 @@ func (thw *TrustedHW) Finalize(chain consensus.ChainReader, header *types.Header
 
 func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, stop <-chan struct{}) (*types.Block, error){
 	//attempt to achieve consensus.
+	state := chain.GetThwState()
 
-
-
+	ret, err := state.FakeConsensus(block.Coinbase(), block.NumberU64())
+	if err != nil{
+		return nil, err
+	}
+	if ret == false{
+		return nil, errNoLeader
+	}
+	//it is elected as the leader and can append block.
 
 	//Step 1. DO traditional Paxos consensus
-	ret, seed := thw.invokeConsensus(chain, block.Number())
-	if ret == false { //not a consensused leader
-		_ = seed
-		return nil, errNoCommittee
-	}
 	//elected as the leader.
 	//TODO: step 2, use verifier to avoid network partition. Next round.
 	//Step 2. Ask for verfication from the verifier groups.
-
-
 	return block, nil
 
 }

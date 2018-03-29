@@ -59,3 +59,4 @@ func Crit(msg string, ctx ...interface{}) {
 	root.write(msg, LvlCrit, ctx)
 	os.Exit(1)
 }
+

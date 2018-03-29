@@ -9,6 +9,7 @@ import (
 	"errors"
 	"encoding/binary"
 	"github.com/ethereum/go-ethereum/core/thwCore"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var(
@@ -130,3 +131,23 @@ func addrToInt (address common.Address) uint64{
 		binary.BigEndian.Uint64(address[8:16]) + uint64(binary.BigEndian.Uint32(address[16:20]))
 }
 
+func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, error) {
+	if _, ret := thws.candidateList.Get(addr); !ret {
+		return false, ErrNoCandidate
+	}
+
+	me := addrToInt(addr)
+
+	candidates := thws.candidateList.Keys()
+	for _, c := range candidates{
+		x, ok := c.(common.Address)
+		if !(ok){
+			log.Error("Wrong type from candidate list")
+		}else{
+			if me < addrToInt(x){ //not the biggest
+				return false, nil
+			}
+		}
+	}
+	return true, nil
+}
