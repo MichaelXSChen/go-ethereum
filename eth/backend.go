@@ -48,6 +48,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/consensus/trustedHW"
 )
 
 type LesServer interface {
@@ -113,6 +114,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, err
 	}
 	stopDbUpgrade := upgradeDeduplicateData(chainDb)
+	//xs: config comes from the config.Genesis.
 	chainConfig, genesisHash, genesisErr := core.SetupGenesisBlock(chainDb, config.Genesis)
 	if _, ok := genesisErr.(*params.ConfigCompatError); genesisErr != nil && !ok {
 		return nil, genesisErr
@@ -214,7 +216,9 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
 	// If proof-of-authority is requested, set it up
 	log.Debug("Creating Consensus engine")
-
+	if chainConfig.THW != nil{
+		return trustedHW.New(chainConfig.THW)
+	}
 
 	if chainConfig.Clique != nil {
 		return clique.New(chainConfig.Clique, db)

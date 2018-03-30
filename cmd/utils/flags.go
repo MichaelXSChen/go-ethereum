@@ -1012,6 +1012,7 @@ func SetShhConfig(ctx *cli.Context, stack *node.Node, cfg *whisper.Config) {
 }
 
 // SetEthConfig applies eth-related command line flags to the config.
+//eth.Config set here.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	// Avoid conflicting network flags
 	checkExclusive(ctx, DeveloperFlag, TestnetFlag, RinkebyFlag)
@@ -1124,6 +1125,7 @@ func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
 }
 
 // RegisterEthService adds an Ethereum client to the stack.
+//xs: chainConfig from cfg.
 func RegisterEthService(stack *node.Node, cfg *eth.Config) {
 	var err error
 	if cfg.SyncMode == downloader.LightSync {

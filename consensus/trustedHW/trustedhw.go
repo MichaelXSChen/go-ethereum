@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	//"github.com/naoina/toml/ast"
 	//"time"
-	"github.com/ethereum/go-ethereum/core/thwCore"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -25,16 +25,23 @@ var (
 
 
 
-type Config struct{
-	//parameters:
-
-}
-
 
 type TrustedHW struct{
-	config Config
+
 
 }
+
+func New (config *params.THWConfig) *TrustedHW{
+	//set missing configs
+
+	return &TrustedHW{}
+}
+
+
+
+
+
+
 //put the author (the leader of the committee)
 func (thw *TrustedHW) Author(header *types.Header) (common.Address, error){
 	return header.Coinbase, nil
@@ -50,7 +57,8 @@ func (thw *TrustedHW) VerifyHeader (chain consensus.ChainReader, header *types.H
 // VerifyHeaders is similar to VerifyHeader, but verifies a batch of headers
 // concurrently. The method returns a quit channel to abort the operations and
 // a results channel to retrieve the async verifications.
-//XS: its an async function.
+//
+// XS: its an async function.
 func (thw *TrustedHW) VerifyHeaders(chain consensus.ChainReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
 	abort := make(chan struct{})
 	results := make(chan error, len(headers))
@@ -211,11 +219,11 @@ func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API{
 
 
 func invokeConsensus() uint64{
-
+	return uint64(0)
 }
 
 //as
-func consensus_thread (asCommittee <-chan uint64, abort <-chan bool, results<- chan uint64) error {
+func consensus_thread (asCommittee <-chan uint64, abort <-chan bool, results chan<- uint64) error {
 	for{//forever
 		//get a term of length asCommittee
 		termLen := <- asCommittee

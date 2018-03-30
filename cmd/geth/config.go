@@ -151,7 +151,7 @@ func enableWhisper(ctx *cli.Context) bool {
 }
 
 func makeFullNode(ctx *cli.Context) *node.Node {
-	stack, cfg := makeConfigNode(ctx)
+	stack, cfg := makeConfigNode(ctx) //xs: chain config comes from here.
 
 	utils.RegisterEthService(stack, &cfg.Eth)
 
