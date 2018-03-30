@@ -158,7 +158,6 @@ func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header)
 	if !ret{
 		return errNoCommittee
 	}
-	header.Coinbase = common.Address{} //empty
 	header.Nonce = types.BlockNonce{} //empty
 
 	header.Difficulty = nil

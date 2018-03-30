@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"github.com/ethereum/go-ethereum/core/thwCore"
 	"github.com/ethereum/go-ethereum/log"
+	"time"
 )
 
 var(
@@ -153,7 +154,7 @@ func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, e
 		return false, ErrNoCandidate
 	}
 
-	me := addrToInt(addr)
+	mine := addrToInt(addr)
 
 	candidates := thws.candidateList.Keys()
 	for _, c := range candidates{
@@ -161,10 +162,12 @@ func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, e
 		if !(ok){
 			log.Error("Wrong type from candidate list")
 		}else{
-			if me < addrToInt(x){ //not the biggest
+			if his:= addrToInt(x); mine < his{ //not the biggest
+				log.THW("found addr larger than me", "my addr", addr, "my int", mine, "his addr", x, "his int", his)
 				return false, nil
 			}
 		}
 	}
+	time.Sleep(10*time.Second)
 	return true, nil
 }

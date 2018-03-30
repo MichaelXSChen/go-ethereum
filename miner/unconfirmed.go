@@ -79,6 +79,7 @@ func (set *unconfirmedBlocks) Insert(index uint64, hash common.Hash) {
 		set.blocks.Move(-1).Link(item)
 	}
 	// Display a log for the user to notify of a new mined block unconfirmed
+	//xs: reach here.
 	log.Info("🔨 mined potential block", "number", index, "hash", hash)
 }
 
@@ -86,6 +87,7 @@ func (set *unconfirmedBlocks) Insert(index uint64, hash common.Hash) {
 // allowance, checking them against the canonical chain for inclusion or staleness
 // report.
 func (set *unconfirmedBlocks) Shift(height uint64) {
+	//log.THW("unconfirmed.go Shift called", "height", height)
 	set.lock.Lock()
 	defer set.lock.Unlock()
 
@@ -93,6 +95,9 @@ func (set *unconfirmedBlocks) Shift(height uint64) {
 		// Retrieve the next unconfirmed block and abort if too fresh
 		next := set.blocks.Value.(*unconfirmedBlock)
 		if next.index+uint64(set.depth) > height {
+			//xs: depth, only after x block, it may confirm
+			//log.THW("checking \"too fresh\"", "next.index",  next.index, "set.depth", uint64(set.depth), "height", height)
+
 			break
 		}
 		// Block seems to exceed depth allowance, check for canonical status
