@@ -120,6 +120,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		return nil, genesisErr
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
+	log.Info(fmt.Sprintf("Chain Configuration: %#v", chainConfig))
+
 
 	eth := &Ethereum{
 		config:         config,

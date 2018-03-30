@@ -148,7 +148,8 @@ func (c *CliqueConfig) String() string {
 
 type THWConfig struct {
 	//xs: config parameters.
-	FakeConsensus bool
+	FakeConsensus bool `json:"Fake"`
+	SGXEnabled bool `json:"SGX"`
 
 }
 

@@ -12,6 +12,7 @@ import (
 	//"github.com/naoina/toml/ast"
 	//"time"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var (
@@ -27,14 +28,18 @@ var (
 
 
 type TrustedHW struct{
+	config *params.THWConfig
 
 
 }
 
 func New (config *params.THWConfig) *TrustedHW{
 	//set missing configs
+	conf := *config
 
-	return &TrustedHW{}
+	return &TrustedHW{
+		config: &conf,
+	}
 }
 
 
@@ -135,16 +140,18 @@ func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Head
 }
 
 //Read through the Chain and Determine whether addr is in the committee.
-func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64) (bool, error) {
+func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64, fake bool) (bool, error) {
 	state := chain.GetThwState()
-	return state.IsCommittee(addr, number)
+	return state.IsCommittee(addr, number, fake)
 }
 
 
 func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header) error {
 	//A header is prepared only when a consensus has been made.
 	number := header.Number.Uint64()
-	ret, err := thw.isCommittee(chain, header.Coinbase, number)
+	log.Info("Preparing block", "number", number )
+
+	ret, err := thw.isCommittee(chain, header.Coinbase, number, thw.config.FakeConsensus)
 	if err != nil {
 		return err
 	}

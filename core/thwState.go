@@ -72,7 +72,10 @@ func (thws *THWState) findTerm (num uint64) (*thwCore.Term, error){
 
 
 //a simple/fake checkCommittee function
-func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool {
+func (thws *THWState) checkCommittee(addr common.Address, rand uint64, fakeConsensus bool) bool {
+	if (fakeConsensus){
+		return true
+	}
 	x := addrToInt(addr)
 	m := thws.committeeRatio
 	if (x-rand)%m == 0 {
@@ -83,20 +86,34 @@ func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool {
 }
 
 
-func (thws *THWState) IsCommittee(addr common.Address, num uint64) (bool, error){
+func (thws *THWState) IsCommittee(addr common.Address, num uint64, fakeConsensus bool) (bool, error){
+	seed := uint64(0)
+
+	if fakeConsensus { //don't check the consensus
+		candidate := thwCore.Candidate{
+			Referee:addr,
+			Addr:addr,
+			JoinRound:uint64(0),
+			Term:uint64(10000),
+		}
+		thws.AddCandidate(&candidate)
+		return true, nil
+	}
+
+
 	t, err := thws.findTerm(num)
 	if err != nil {
 		return false, err
 	}
-	seed := thws.hc.GetHeaderByNumber(t.Start).TrustRand
+	seed = thws.hc.GetHeaderByNumber(t.Start).TrustRand
 
-	return thws.checkCommittee(addr, seed), nil
+	return thws.checkCommittee(addr, seed, fakeConsensus), nil
 }
 
 
 func (thws *THWState) IsNextCommittee(addr common.Address, num uint64) (bool, error){
 	seed := thws.hc.GetHeaderByNumber(num).TrustRand
-	return thws.checkCommittee(addr, seed), nil
+	return thws.checkCommittee(addr, seed, false), nil
 }
 
 
@@ -120,7 +137,7 @@ func (thws *THWState) AddCandidate(candidate *thwCore.Candidate) error{
 		thws.candidateList.Put(candidate.Addr, candidate)
 		thws.candidateCount++
 	}
-	fmt.Println("added candidate with addr", candidate.Addr)
+	log.Info("Add Condidate", "addr", candidate.Addr)
 
 	return nil
 }
