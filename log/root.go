@@ -60,3 +60,7 @@ func Crit(msg string, ctx ...interface{}) {
 	os.Exit(1)
 }
 
+func THW (msg string, ctx ...interface{}) {
+	root.write(msg, LvlTHW, ctx)
+}
+

@@ -149,7 +149,7 @@ func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Addr
 func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header) error {
 	//A header is prepared only when a consensus has been made.
 	number := header.Number.Uint64()
-	log.Info("Preparing block", "number", number )
+	log.THW("Preparing block", "number", number )
 
 	ret, err := thw.isCommittee(chain, header.Coinbase, number, thw.config.FakeConsensus)
 	if err != nil {

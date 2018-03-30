@@ -20,6 +20,7 @@ const (
 	LvlError
 	LvlWarn
 	LvlInfo
+	LvlTHW
 	LvlDebug
 	LvlTrace
 )
@@ -33,6 +34,8 @@ func (l Lvl) AlignedString() string {
 		return "DEBUG"
 	case LvlInfo:
 		return "INFO "
+	case LvlTHW:
+		return "*THW*"
 	case LvlWarn:
 		return "WARN "
 	case LvlError:
@@ -51,6 +54,8 @@ func (l Lvl) String() string {
 		return "trce"
 	case LvlDebug:
 		return "dbug"
+	case LvlTHW:
+		return "thw "
 	case LvlInfo:
 		return "info"
 	case LvlWarn:
@@ -72,6 +77,8 @@ func LvlFromString(lvlString string) (Lvl, error) {
 		return LvlTrace, nil
 	case "debug", "dbug":
 		return LvlDebug, nil
+	case "thw", "THW":
+		return LvlTHW, nil
 	case "info":
 		return LvlInfo, nil
 	case "warn":
@@ -119,6 +126,7 @@ type Logger interface {
 	Warn(msg string, ctx ...interface{})
 	Error(msg string, ctx ...interface{})
 	Crit(msg string, ctx ...interface{})
+	THW(msg string, ctx ...interface{})
 }
 
 type logger struct {
@@ -177,6 +185,11 @@ func (l *logger) Error(msg string, ctx ...interface{}) {
 
 func (l *logger) Crit(msg string, ctx ...interface{}) {
 	l.write(msg, LvlCrit, ctx)
+	os.Exit(1)
+}
+
+func (l *logger) THW(msg string, ctx ...interface{}) {
+	l.write(msg, LvlTHW, ctx)
 	os.Exit(1)
 }
 

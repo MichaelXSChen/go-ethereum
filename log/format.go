@@ -94,6 +94,8 @@ func TerminalFormat(usecolor bool) Format {
 				color = 31
 			case LvlWarn:
 				color = 33
+			case LvlTHW:
+				color = 34
 			case LvlInfo:
 				color = 32
 			case LvlDebug:

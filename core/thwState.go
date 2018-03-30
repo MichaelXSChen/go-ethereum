@@ -137,7 +137,7 @@ func (thws *THWState) AddCandidate(candidate *thwCore.Candidate) error{
 		thws.candidateList.Put(candidate.Addr, candidate)
 		thws.candidateCount++
 	}
-	log.Info("Add Condidate", "addr", candidate.Addr)
+	log.THW("Add Condidate", "addr", candidate.Addr)
 
 	return nil
 }
