@@ -57,7 +57,7 @@ func newUnconfirmedBlocks(chain headerRetriever, depth uint) *unconfirmedBlocks 
 		depth: depth,
 	}
 }
-
+//xs: index is blockchain's block index.
 // Insert adds a new block to the set of unconfirmed ones.
 func (set *unconfirmedBlocks) Insert(index uint64, hash common.Hash) {
 	// If a new block was mined locally, shift out any old enough blocks
@@ -96,8 +96,6 @@ func (set *unconfirmedBlocks) Shift(height uint64) {
 		next := set.blocks.Value.(*unconfirmedBlock)
 		if next.index+uint64(set.depth) > height {
 			//xs: depth, only after x block, it may confirm
-			//log.THW("checking \"too fresh\"", "next.index",  next.index, "set.depth", uint64(set.depth), "height", height)
-
 			break
 		}
 		// Block seems to exceed depth allowance, check for canonical status

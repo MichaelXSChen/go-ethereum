@@ -160,7 +160,7 @@ func (thw *TrustedHW) Prepare(chain consensus.ChainReader, header *types.Header)
 	}
 	header.Nonce = types.BlockNonce{} //empty
 
-	header.Difficulty = nil
+	header.Difficulty = big.NewInt(1)
 	header.MixDigest = common.Hash{} //empty
 
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -214,7 +214,7 @@ func (thw *TrustedHW) invokeConsensus (chain consensus.ChainReader, number *big.
 func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, parent *types.Header) *big.Int {
 	//Can use this function to change the protocol parameters.
 
-	return nil
+	return big.NewInt(1)
 }
 
 

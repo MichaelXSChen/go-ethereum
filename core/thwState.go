@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"github.com/ethereum/go-ethereum/core/thwCore"
 	"github.com/ethereum/go-ethereum/log"
+	//"time"
 	"time"
 )
 
@@ -168,6 +169,6 @@ func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, e
 			}
 		}
 	}
-	time.Sleep(10*time.Second)
+	time.Sleep(2*time.Second)
 	return true, nil
 }
