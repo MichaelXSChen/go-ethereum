@@ -9,5 +9,9 @@ for i in `seq 1 3`; do
     echo -n "."
 done 
 echo " "
+
+echo "creating accounts"
+python ./create_account.py
+
 echo "starting geth node"
 ./start.sh 00

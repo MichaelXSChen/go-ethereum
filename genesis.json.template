@@ -6,7 +6,8 @@
         "eip158Block": 0,
 	"thw":{
 	    "Fake": true,
-	    "SGX": false 
+	    "SGX": false,
+	    "accounts":{}
 	}
     },
     "coinbase": "0x0000000000000000000000000000000000000000",

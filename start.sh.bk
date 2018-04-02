@@ -14,11 +14,8 @@ no=$1
 datadir=data
 DIRECTORY=$datadir/$no
 mkdir -p $datadir
-if [ ! -d "$DIRECTORY/initialized" ]; then
+if [ ! -d "$DIRECTORY" ]; then
     echo "initiating node...."
     ./build/bin/geth --datadir $DIRECTORY --debug --verbosity 4 init ./genesis.json
-    toch $DIRECTORY/initialized
 fi
-ADDR=`cat $DIRECTORY/keystore/* | python3 -c "import sys, json; print(json.load(sys.stdin)['address'])"`
-echo $ADDR
-./build/bin/geth --datadir $DIRECTORY --unlock $ADDR --password ./pass --debug --verbosity 4 --networkid 930412 --ipcdisable --port 619$no --rpc --rpccorsdomain "*" --rpcport 81$no --bootnodes $bootnode_addr console 
+./build/bin/geth --datadir $DIRECTORY --debug --verbosity 4 --networkid 930412 --ipcdisable --port 619$no --rpc --rpccorsdomain "*" --rpcport 81$no --bootnodes $bootnode_addr console 
