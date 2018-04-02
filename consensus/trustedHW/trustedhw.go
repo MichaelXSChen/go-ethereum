@@ -218,10 +218,16 @@ func (thw *TrustedHW) CalcDifficulty(chain consensus.ChainReader, time uint64, p
 }
 
 
-func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API{
-	return nil
-
+func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API {
+	return []rpc.API{{
+		Namespace: "thw",
+		Version:   "1.0",
+		Service:   &API{chain: chain, thw:thw},
+		Public:    false,
+	}}
 }
+
+
 
 
 func invokeConsensus() uint64{

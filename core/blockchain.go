@@ -495,7 +495,7 @@ func (bc *BlockChain) insert(block *types.Block) {
 	if err := WriteHeadBlockHash(bc.db, block.Hash()); err != nil {
 		log.Crit("Failed to insert head block hash", "err", err)
 	}
-	bc.currentBlock.Store(block)
+	bc.currentBlock.Store(block) //the cache value
 
 	// If the block is better than our head or is on a different chain, force update heads
 	if updateHeads {
@@ -1001,6 +1001,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		return NonStatTy, err
 	}
 	// Set new head.
+	//xs: insert to block chain only happend here.
 	if status == CanonStatTy {
 		bc.insert(block)
 	}

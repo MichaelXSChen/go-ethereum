@@ -55,6 +55,8 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // Process returns the receipts and logs accumulated during the process and
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
+//xs: the main function for processing the transactions.
+
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
 	var (
 		receipts types.Receipts
@@ -91,6 +93,19 @@ func ApplyTransaction(config *params.ChainConfig, bc *BlockChain, author *common
 	msg, err := tx.AsMessage(types.MakeSigner(config, header.Number))
 	if err != nil {
 		return nil, 0, err
+	}
+
+	if config.THW != nil{
+		//if the system is running is THW consensus, check whether the transaction is a register account.
+		reg, err := checkCandidateReg(bc, header, tx, msg)
+		if err != nil {
+			return nil, 0, err
+		}
+		if reg{
+			//TODO: what to return on a register transaction.
+			return new(types.Receipt), 0, nil
+		}
+
 	}
 	// Create a new context to be used in the EVM environment
 	context := NewEVMContext(msg, header, bc, author)

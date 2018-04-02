@@ -12,11 +12,21 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	//"time"
 	"time"
+	"github.com/ethereum/go-ethereum/core/types"
+	"bytes"
 )
+
+var (
+	RegAddr = [20]byte{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}
+	RegPayloadLen = 20 + 8
+)
+
+
 
 var(
 	ErrNoCandidate = errors.New("Not a Candidate")
 	ErrInitFailed  = errors.New("THW State Init Failed")
+	ErrInvalidReg  = errors.New("Invalid Registration Transaction Format")
 )
 
 
@@ -171,4 +181,31 @@ func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, e
 	}
 	time.Sleep(2*time.Second)
 	return true, nil
+}
+
+
+
+func checkCandidateReg(bc *BlockChain, header *types.Header, tx *types.Transaction, msg types.Message) (bool, error){
+	recipient := tx.To()
+	if bytes.Equal(RegAddr[:], recipient[:]) {
+		//This is a registration transaction
+		data := tx.Data()
+		if len(data) != RegPayloadLen {
+			return true, ErrInvalidReg
+		}
+		term := binary.BigEndian.Uint64(data[20:28])
+		var addr common.Address
+		copy(addr[:], data[:20])
+		can := &thwCore.Candidate{
+			Referee: msg.From(),
+			Addr: addr,
+			Term: term,
+			JoinRound:header.Number.Uint64(),
+		}
+		err := bc.hc.thwState.AddCandidate(can)
+		if err != nil{
+			return true, err
+		}
+	}
+	return false, nil
 }
