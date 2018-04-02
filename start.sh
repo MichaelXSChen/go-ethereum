@@ -17,7 +17,7 @@ mkdir -p $datadir
 if [ ! -d "$DIRECTORY/initialized" ]; then
     echo "initiating node...."
     ./build/bin/geth --datadir $DIRECTORY --debug --verbosity 4 init ./genesis.json
-    toch $DIRECTORY/initialized
+    touch $DIRECTORY/initialized
 fi
 ADDR=`cat $DIRECTORY/keystore/* | python3 -c "import sys, json; print(json.load(sys.stdin)['address'])"`
 echo $ADDR
