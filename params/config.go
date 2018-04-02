@@ -150,6 +150,8 @@ type THWConfig struct {
 	//xs: config parameters.
 	FakeConsensus bool `json:"Fake"`
 	SGXEnabled bool `json:"SGX"`
+	InitialAccounts []string `json:"accounts"`
+	CommitteeSize uint64 `json:"committeeSize"`
 
 }
 

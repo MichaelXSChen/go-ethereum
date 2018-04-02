@@ -12,9 +12,10 @@ for node in nodes:
     for f in glob.glob(file):
         addr = json.load(open(f))['address']
         addrs.append(addr)
+
 print("Creating genesis.json")
 genesis = json.load(open("genesis.json.template"))
-for addr in addrs:
-    genesis['config']['thw']['accounts'][addr] = 1000 
+genesis['config']['thw']['accounts']= addrs 
+
 with open('genesis.json', 'w') as fp:
     json.dump(genesis, fp, indent=4)

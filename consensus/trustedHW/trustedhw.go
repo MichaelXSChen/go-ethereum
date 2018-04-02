@@ -13,6 +13,8 @@ import (
 	//"time"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/core/thwCore"
+	"encoding/hex"
 )
 
 var (
@@ -29,17 +31,18 @@ var (
 
 type TrustedHW struct{
 	config *params.THWConfig
-
+	InitialAccounts []common.Address
 
 }
 
 func New (config *params.THWConfig) *TrustedHW{
 	//set missing configs
 	conf := *config
-
+	log.THW("Created THW consensus Engine", "Initial account 0", config.InitialAccounts[0])
 	return &TrustedHW{
 		config: &conf,
 	}
+
 }
 
 
@@ -142,7 +145,27 @@ func (thw *TrustedHW) VerifySeal(chain consensus.ChainReader, header *types.Head
 //Read through the Chain and Determine whether addr is in the committee.
 func (thw *TrustedHW) isCommittee (chain consensus.ChainReader, addr common.Address, number uint64, fake bool) (bool, error) {
 	state := chain.GetThwState()
-	return state.IsCommittee(addr, number, fake)
+	if state.CandidateCount() == 0 && len(thw.config.InitialAccounts) != 0{
+		//using fix account tests
+		//Add the account and a fake term
+		for _, account  := range thw.config.InitialAccounts {
+			var candidate thwCore.Candidate
+			candidate.JoinRound = 0
+			decoded, _ := hex.DecodeString(account)
+			copy(candidate.Addr[:],decoded)
+			copy(candidate.Referee[:], decoded)
+			candidate.Term = 1000
+			state.AddCandidate(&candidate)
+		}
+		state.NewTerm(&thwCore.Term{
+			Start:0,
+			Len: 1000,
+			Seed: 1,
+		})
+
+	}
+
+	return state.IsCommittee(addr, number)
 }
 
 

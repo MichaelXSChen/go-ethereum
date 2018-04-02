@@ -35,7 +35,7 @@ type THWState struct {
 	mu sync.Mutex
 	//members
 	candidateList *hashmap.Map    //key: addr, value: *Candidate
-	candidateCount int64
+	candidateCount uint64
 	//rand seed from block
 	//latestRand int64
 	//latestBlock int64
@@ -57,7 +57,10 @@ func (thws *THWState) Init(headerchain interface{}) error { //TODO: set paramete
 		return ErrInitFailed
 	}
 	thws.hc = hc
+
 	thws.candidateCount = 0
+	thws.committeeRatio = 1
+
 	thws.mu.Unlock()
 	return nil
 }
@@ -66,6 +69,8 @@ func (thws *THWState) Init(headerchain interface{}) error { //TODO: set paramete
 func (thws *THWState) findTerm (num uint64) (*thwCore.Term, error){
 	thws.mu.Lock()
 	defer thws.mu.Unlock()
+
+	log.THW("Finding term", "num", num)
 
 	it := thws.CommitteeTerms.Iterator()
 
@@ -84,10 +89,7 @@ func (thws *THWState) findTerm (num uint64) (*thwCore.Term, error){
 
 
 //a simple/fake checkCommittee function
-func (thws *THWState) checkCommittee(addr common.Address, rand uint64, fakeConsensus bool) bool {
-	if (fakeConsensus){
-		return true
-	}
+func (thws *THWState) checkCommittee(addr common.Address, rand uint64) bool {
 	x := addrToInt(addr)
 	m := thws.committeeRatio
 	if (x-rand)%m == 0 {
@@ -98,20 +100,8 @@ func (thws *THWState) checkCommittee(addr common.Address, rand uint64, fakeConse
 }
 
 
-func (thws *THWState) IsCommittee(addr common.Address, num uint64, fakeConsensus bool) (bool, error){
+func (thws *THWState) IsCommittee(addr common.Address, num uint64) (bool, error){
 	seed := uint64(0)
-
-	if fakeConsensus { //don't check the consensus
-		candidate := thwCore.Candidate{
-			Referee:addr,
-			Addr:addr,
-			JoinRound:uint64(0),
-			Term:uint64(10000),
-		}
-		thws.AddCandidate(&candidate)
-		return true, nil
-	}
-
 
 	t, err := thws.findTerm(num)
 	if err != nil {
@@ -119,13 +109,13 @@ func (thws *THWState) IsCommittee(addr common.Address, num uint64, fakeConsensus
 	}
 	seed = thws.hc.GetHeaderByNumber(t.Start).TrustRand
 
-	return thws.checkCommittee(addr, seed, fakeConsensus), nil
+	return thws.checkCommittee(addr, seed), nil
 }
 
 
 func (thws *THWState) IsNextCommittee(addr common.Address, num uint64) (bool, error){
 	seed := thws.hc.GetHeaderByNumber(num).TrustRand
-	return thws.checkCommittee(addr, seed, false), nil
+	return thws.checkCommittee(addr, seed), nil
 }
 
 
@@ -149,7 +139,7 @@ func (thws *THWState) AddCandidate(candidate *thwCore.Candidate) error{
 		thws.candidateList.Put(candidate.Addr, candidate)
 		thws.candidateCount++
 	}
-	log.THW("Add Condidate", "addr", candidate.Addr)
+	log.THW("Add Condidate", "addr", candidate.Addr, "candidate count", thws.candidateCount)
 
 	return nil
 }
@@ -161,6 +151,8 @@ func addrToInt (address common.Address) uint64{
 }
 
 func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, error) {
+	log.THW("Doing Fake Consensus", "addr", addr)
+
 	if _, ret := thws.candidateList.Get(addr); !ret {
 		return false, ErrNoCandidate
 	}
@@ -183,6 +175,15 @@ func (thws *THWState) FakeConsensus(addr common.Address, number uint64) (bool, e
 	return true, nil
 }
 
+func (thws *THWState) CandidateCount() uint64{
+	return thws.candidateCount
+}
+
+func (thws *THWState) NewTerm (term *thwCore.Term) error {
+	//TODO: Sanity Check
+	thws.CommitteeTerms.Add(term)
+	return nil
+}
 
 
 func checkCandidateReg(bc *BlockChain, header *types.Header, tx *types.Transaction, msg types.Message) (bool, error){
@@ -209,3 +210,5 @@ func checkCandidateReg(bc *BlockChain, header *types.Header, tx *types.Transacti
 	}
 	return false, nil
 }
+
+

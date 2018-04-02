@@ -11,8 +11,10 @@ import (
 
 type State interface{
 	Init(hc interface{}) error
-	IsCommittee(addr common.Address, num uint64, fakeConsensus bool) (bool, error)
+	IsCommittee(addr common.Address, num uint64) (bool, error)
 	IsNextCommittee(addr common.Address, num uint64) (bool, error)
 	AddCandidate(candidate *Candidate) error
 	FakeConsensus(addr common.Address, number uint64) (bool, error)
+	NewTerm (term *Term) error
+	CandidateCount() uint64
 }
