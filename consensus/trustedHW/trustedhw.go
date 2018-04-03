@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/thwCore"
 	"encoding/hex"
 	"net"
+	"github.com/ethereum/go-ethereum/p2p"
 )
 
 var (
@@ -35,10 +36,12 @@ type TrustedHW struct{
 	InitialAccounts []common.Address
 
 
-	//channels:
+	//validator:
 	validate_blocks chan uint64
 	validate_abort chan interface{}
 	validate_errors  chan error
+	validate_server p2p.Server
+
 }
 
 func New (config *params.THWConfig) *TrustedHW{
@@ -50,10 +53,15 @@ func New (config *params.THWConfig) *TrustedHW{
 	thw.config = config
 
 	//create validate thread
-	thw.validate_blocks = make(chan uint64, 1024)
-	thw.validate_abort = make(chan interface{}, 1024)
-	thw.validate_errors = make(chan error, 1024)
-	go validator_thread_func(thw.validate_blocks, thw.validate_abort, thw.validate_errors)
+	//thw.validate_blocks = make(chan uint64, 1024)
+	//thw.validate_abort = make(chan interface{}, 1024)
+	//thw.validate_errors = make(chan error, 1024)
+	//
+	//
+	//go validator_thread_func(thw.validate_blocks, thw.validate_abort, thw.validate_errors)
+
+
+
 	return thw
 }
 
