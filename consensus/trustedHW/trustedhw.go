@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/core/thwCore"
 	"encoding/hex"
+	"net"
 )
 
 var (
@@ -33,16 +34,27 @@ type TrustedHW struct{
 	config *params.THWConfig
 	InitialAccounts []common.Address
 
+
+	//channels:
+	validate_blocks chan uint64
+	validate_abort chan interface{}
+	validate_errors  chan error
 }
 
 func New (config *params.THWConfig) *TrustedHW{
 	//set missing configs
-	conf := *config
-	log.THW("Created THW consensus Engine", "Initial account 0", config.InitialAccounts[0])
-	return &TrustedHW{
-		config: &conf,
-	}
 
+	log.THW("Created THW consensus Engine", "Initial account 0", config.InitialAccounts[0])
+	thw := new(TrustedHW)
+
+	thw.config = config
+
+	//create validate thread
+	thw.validate_blocks = make(chan uint64, 1024)
+	thw.validate_abort = make(chan interface{}, 1024)
+	thw.validate_errors = make(chan error, 1024)
+	go validator_thread_func(thw.validate_blocks, thw.validate_abort, thw.validate_errors)
+	return thw
 }
 
 
@@ -224,6 +236,10 @@ func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, sto
 	//Step 1. DO traditional Paxos consensus
 	//elected as the leader.
 	//TODO: step 2, use verifier to avoid network partition. Next round.
+
+
+
+
 	//Step 2. Ask for verfication from the verifier groups.
 	return block, nil
 
@@ -250,6 +266,13 @@ func (thw *TrustedHW) APIs(chain consensus.ChainReader) []rpc.API {
 	}}
 }
 
+func (thw *TrustedHW) NotifyValidateThread(chain consensus.ChainReader, num uint64){
+	state := chain.GetThwState()
+	if ret, _ := state.IsValidator(nil, num+1); ret{
+		thw.validate_blocks <- num+1
+	}
+}
+
 
 
 
@@ -273,4 +296,33 @@ func consensus_thread (asCommittee <-chan uint64, abort <-chan bool, results cha
 		}
 
 	}
+	return nil
+}
+
+var validate_msg_len = 1024
+var validate_reply =[]byte("Validated")
+
+func validator_thread_func (blocks <-chan uint64, abort <-chan interface{}, errors chan<- error)  {
+	pc, err := net.ListenPacket("udp", "")
+	log.THW("Validator Thread Listening", "Addr", pc.LocalAddr())
+	if err != nil{
+		errors <- err
+	}
+	defer pc.Close()
+	for {//forever
+		blockNum := <- blocks
+		log.THW("Validator thread receives signal", "Validating Block", blockNum)
+		buffer := make([]byte, validate_msg_len)
+		_, addr, err := pc.ReadFrom(buffer)
+		if err != nil{
+			errors <- err
+		}
+		if validate (blockNum, buffer) {
+			pc.WriteTo(validate_reply, addr)
+		}
+	}
+}
+
+func validate (blockNum uint64, msg []byte) bool{
+	return true
 }

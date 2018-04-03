@@ -44,6 +44,7 @@ import (
 	"github.com/hashicorp/golang-lru"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 	"github.com/ethereum/go-ethereum/core/thwCore"
+	"github.com/ethereum/go-ethereum/consensus/trustedHW"
 )
 
 var (
@@ -479,11 +480,12 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 // Note, this function assumes that the `mu` mutex is held!
 func (bc *BlockChain) insert(block *types.Block) {
 	fmt.Println("Insert Called");
-	//candidate := new(Candidate)
-	//candidate.addr = block.Header().Coinbase
-	//candidate.joinRound = block.Header().Number.Uint64()
-	//candidate.term = 100
-	//bc.thwState.AddCandidate(candidate)
+
+	thw, ret := bc.engine.(*trustedHW.TrustedHW)
+	if ret{
+		thw.NotifyValidateThread(bc, block.NumberU64())
+	}
+
 
 	// If the block is on a side chain or an unknown one, force other heads onto it too
 	updateHeads := GetCanonicalHash(bc.db, block.NumberU64()) != block.Hash()

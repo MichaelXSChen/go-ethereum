@@ -17,4 +17,7 @@ type State interface{
 	FakeConsensus(addr common.Address, number uint64) (bool, error)
 	NewTerm (term *Term) error
 	CandidateCount() uint64
+	IsValidator (addr *common.Address, num uint64 ) (bool, error)
+	ValidatorCount () uint64
+
 }

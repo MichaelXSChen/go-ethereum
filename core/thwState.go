@@ -186,6 +186,7 @@ func (thws *THWState) NewTerm (term *thwCore.Term) error {
 }
 
 
+
 func checkCandidateReg(bc *BlockChain, header *types.Header, tx *types.Transaction, msg types.Message) (bool, error){
 	recipient := tx.To()
 	if bytes.Equal(RegAddr[:], recipient[:]) {
@@ -211,4 +212,11 @@ func checkCandidateReg(bc *BlockChain, header *types.Header, tx *types.Transacti
 	return false, nil
 }
 
+//currently, all node is validator.
+func (thws *THWState) IsValidator (addr *common.Address, num uint64) (bool, error){
+	return true, nil
+}
 
+func (thws *THWState) ValidatorCount () uint64{
+	return thws.candidateCount
+}
