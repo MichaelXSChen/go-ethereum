@@ -215,8 +215,8 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
 
-	//pm.validateBlockSub = pm.eventMux.Subscribe(core.NewValidateBlockEvent{})
-	//go pm.validateBlockLoop()
+	pm.validateBlockSub = pm.eventMux.Subscribe(core.NewValidateBlockEvent{})
+	go pm.validateBlockLoop()
 
 	// start sync handlers
 	go pm.syncer()
