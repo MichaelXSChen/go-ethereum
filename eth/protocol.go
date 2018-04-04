@@ -32,17 +32,16 @@ import (
 const (
 	eth62 = 62
 	eth63 = 63
-	thw = 99
 )
 
 // Official short name of the protocol used during capability negotiation.
 var ProtocolName = "eth"
 
 // Supported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{thw, eth63, eth62}
+var ProtocolVersions = []uint{ eth63, eth62}
 
 // Number of implemented message corresponding to different protocol versions.
-var ProtocolLengths = []uint64{20, 17, 8}
+var ProtocolLengths = []uint64{20, 8}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
@@ -65,9 +64,9 @@ const (
 	ReceiptsMsg    = 0x10
 
 	// Protocol messages belonging to THW
-	ValidateReqMsg = 0x20
-	ValidateAcceptMsg = 0x21
-	ValidateRejectMsg = 0x22
+	ValidateReqMsg = 0x11
+	ValidateAcceptMsg = 0x12
+	ValidateRejectMsg = 0x13
 
 )
 
