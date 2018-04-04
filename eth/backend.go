@@ -172,6 +172,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb); err != nil {
 		return nil, err
 	}
+	//xs: eth.EventMux() returns the mux to post event.
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine)
 	eth.miner.SetExtra(makeExtraData(config.ExtraData))
 
@@ -219,7 +220,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *ethash.Config, chai
 	// If proof-of-authority is requested, set it up
 	log.Debug("Creating Consensus engine")
 	if chainConfig.THW != nil{
-		return trustedHW.New(chainConfig.THW)
+		return trustedHW.New(chainConfig.THW, ctx.EventMux)
 	}
 
 	if chainConfig.Clique != nil {

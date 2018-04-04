@@ -17,6 +17,9 @@ import (
 	"encoding/hex"
 	"net"
 	"github.com/ethereum/go-ethereum/p2p"
+	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/core"
+	"time"
 )
 
 var (
@@ -42,9 +45,11 @@ type TrustedHW struct{
 	validate_errors  chan error
 	validate_server p2p.Server
 
+	mux *event.TypeMux
+
 }
 
-func New (config *params.THWConfig) *TrustedHW{
+func New (config *params.THWConfig, mux *event.TypeMux) *TrustedHW{
 	//set missing configs
 
 	log.THW("Created THW consensus Engine", "Initial account 0", config.InitialAccounts[0])
@@ -53,13 +58,13 @@ func New (config *params.THWConfig) *TrustedHW{
 	thw.config = config
 
 	//create validate thread
-	//thw.validate_blocks = make(chan uint64, 1024)
-	//thw.validate_abort = make(chan interface{}, 1024)
-	//thw.validate_errors = make(chan error, 1024)
+	thw.validate_blocks = make(chan uint64, 1024)
+	thw.validate_abort = make(chan interface{}, 1024)
+	thw.validate_errors = make(chan error, 1024)
 	//
 	//
 	//go validator_thread_func(thw.validate_blocks, thw.validate_abort, thw.validate_errors)
-
+	thw.mux = mux
 
 
 	return thw
@@ -244,10 +249,9 @@ func (thw *TrustedHW) Seal (chain consensus.ChainReader, block *types.Block, sto
 	//Step 1. DO traditional Paxos consensus
 	//elected as the leader.
 	//TODO: step 2, use verifier to avoid network partition. Next round.
+	thw.mux.Post(core.NewValidateBlockEvent{block})
 
-
-
-
+	time.Sleep(1 * time.Second)
 	//Step 2. Ask for verfication from the verifier groups.
 	return block, nil
 

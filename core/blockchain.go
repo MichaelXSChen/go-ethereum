@@ -44,7 +44,6 @@ import (
 	"github.com/hashicorp/golang-lru"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 	"github.com/ethereum/go-ethereum/core/thwCore"
-	"github.com/ethereum/go-ethereum/consensus/trustedHW"
 )
 
 var (
@@ -481,10 +480,10 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 func (bc *BlockChain) insert(block *types.Block) {
 	fmt.Println("Insert Called");
 
-	thw, ret := bc.engine.(*trustedHW.TrustedHW)
-	if ret{
-		thw.NotifyValidateThread(bc, block.NumberU64())
-	}
+	//thw, ret := bc.engine.(*trustedHW.TrustedHW)
+	//if ret{
+	//	thw.NotifyValidateThread(bc, block.NumberU64())
+	//}
 
 
 	// If the block is on a side chain or an unknown one, force other heads onto it too

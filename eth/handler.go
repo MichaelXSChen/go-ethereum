@@ -84,12 +84,14 @@ type ProtocolManager struct {
 	txCh          chan core.TxPreEvent
 	txSub         event.Subscription
 	minedBlockSub *event.TypeMuxSubscription
+	validateBlockSub *event.TypeMuxSubscription
 
 	// channels for fetcher, syncer, txsyncLoop
 	newPeerCh   chan *peer
 	txsyncCh    chan *txsync
 	quitSync    chan struct{}
 	noMorePeers chan struct{}
+
 
 	// wait group is used for graceful shutdowns during downloading
 	// and processing
@@ -213,6 +215,9 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	go pm.minedBroadcastLoop()
 
+	pm.validateBlockSub = pm.eventMux.Subscribe(core.NewValidateBlockEvent{})
+	go pm.validateBlockLoop()
+
 	// start sync handlers
 	go pm.syncer()
 	go pm.txsyncLoop()
@@ -223,6 +228,7 @@ func (pm *ProtocolManager) Stop() {
 
 	pm.txSub.Unsubscribe()         // quits txBroadcastLoop
 	pm.minedBlockSub.Unsubscribe() // quits blockBroadcastLoop
+	pm.validateBlockSub.Unsubscribe()
 
 	// Quit the sync loop.
 	// After this send has completed, no new peers will be accepted.
@@ -316,6 +322,9 @@ func (pm *ProtocolManager) handle(p *peer) error {
 
 // handleMsg is invoked whenever an inbound message is received from a remote
 // peer. The remote connection is torn down upon returning any error.
+
+
+//xs: msg handler
 func (pm *ProtocolManager) handleMsg(p *peer) error {
 	// Read the next message from the remote peer, and ensure it's fully consumed
 	msg, err := p.rw.ReadMsg()
@@ -673,12 +682,41 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			p.MarkTransaction(tx.Hash())
 		}
 		pm.txpool.AddRemotes(txs)
-
+	case msg.Code == ValidateReqMsg:
+		var blockNumber uint64
+		if err := msg.Decode(&blockNumber); err != nil{
+			return errResp(ErrDecode, "msg %v: %v", msg, err)
+		}
+		log.THW("Received Validation Request", "blockNumber", blockNumber)
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
 	}
 	return nil
 }
+
+
+
+func (pm *ProtocolManager) ValidateBlock(block *types.Block){
+	//peers := pm.peers.AllPeers()
+	//TODO: do not need to transfer to those already have the message
+	log.THW("Validating Block", "Block number", block.NumberU64())
+
+	//
+	//for _, peer := range peers{
+	//	blocknumber := block.NumberU64()
+	//	p2p.Send(peer.rw, ValidateReqMsg, []interface{}{&blocknumber})
+	//}
+}
+
+
+
+
+
+
+
+
+
+
 
 // BroadcastBlock will either propagate a block to a subset of it's peers, or
 // will only announce it's availability (depending what's requested).
@@ -728,16 +766,33 @@ func (pm *ProtocolManager) BroadcastTx(hash common.Hash, tx *types.Transaction) 
 	log.Trace("Broadcast transaction", "hash", hash, "recipients", len(peers))
 }
 
+func (self *ProtocolManager) validateBlockLoop(){
+	for obj:= range self.validateBlockSub.Chan() {
+		log.THW("validateBlockLoop Received Event")
+		switch ev := obj.Data.(type) {
+		case core.NewValidateBlockEvent:
+			self.ValidateBlock(ev.Block)
+		}
+	}
+}
+
+
+
 // Mined broadcast loop
 func (self *ProtocolManager) minedBroadcastLoop() {
 	// automatically stops if unsubscribe
+
+	//log.THW("mined broadcast loop called")
 	for obj := range self.minedBlockSub.Chan() {
+		log.THW("minedBroadcastLoop Received Event")
 		switch ev := obj.Data.(type) {
 		case core.NewMinedBlockEvent:
 			self.BroadcastBlock(ev.Block, true)  // First propagate block to peers
 			self.BroadcastBlock(ev.Block, false) // Only then announce to the rest
 		}
 	}
+	//log.THW("mined broadcast returned")
+
 }
 
 func (self *ProtocolManager) txBroadcastLoop() {

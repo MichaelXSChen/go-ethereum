@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"sync"
 	"time"
-)
+	)
 
 // TypeMuxEvent is a time-tagged notification pushed to subscribers.
 type TypeMuxEvent struct {
@@ -77,6 +77,7 @@ func (mux *TypeMux) Subscribe(types ...interface{}) *TypeMuxSubscription {
 	}
 	return sub
 }
+
 
 // Post sends an event to all receivers registered for the given type.
 // It returns ErrMuxClosed if the mux has been stopped.
